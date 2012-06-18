@@ -1,0 +1,41 @@
+The Python scripts take LibSVM's training output such as support vectors and kernel coefficients, then predict the class for a larger set of data using Hadoop Streaming and Python. The scripts support two-class classification for radial basis function, linear, polynomial and sigmoid kernels.
+
+Comparison of Output
+
+Prediction results from LibSVM and Hadooop are identical for linear, polynomial and sigmoid kernels. Results differ for the radial basis function when the testing data contains features never present in the training data. I ignore the missing features, while LibSVM assigns a value, which affects the kernel and therefore, the predicted values. As an example, if the LibSVM formatted model file has features labeled 1, 2 and 4 where features 3 and 5 are never present, then I ignore features in the testing data labeled as 3 or 5.
+
+Performance
+
+Results were tested on a single-node Hadoop cluster and Amazon's Elastic Map Reduce (EMR). Run times on a single-node Hadoop cluster were typically 1.5-3 times longer than LibSVM run on the same machine. The radial basis function kernel ran slower than the other kernels by a factor of two for Hadoop, but differences were minor for LibSVM. Performance on Amazon's Elastic Map Reduce varies depending on machine type and number of machines used.
+
+Memory Requirements
+
+All support vectors are stored in memory. In the case that a support vector contains values for features 1, 2 and 4, feature 3 has a value of 0 and is stored in memory (Note that feature 3 will not affect the prediction if it was never present in the training data). Storing a value for all features increases memory requirements, but improves performance. Only one line of testing data is stored in memory at a time.
+
+Running Instructions
+
+1) Convert your input data to the standard LibSVM format.
+
+2) Scale the training data using the LibSVM default, where each feature has a minimum value of -1 and a maximum value of +1. It doesn't matter what labels you use for the predicted values. Save the range file, which contains the minimum and maximum ranges of the original features. If you use easy.py included with LibSVM, the range file and scaled input file will be called something like train.range and train.scale.
+
+3) Train the scaled input file to generate the model file containing the support vectors and other parameters. Any kernel except for 'pre-computed' is fine and use the defaults for svm type and weight. The model file, train.model, for example, will contain the support vectors and other parameters.
+
+4) In the first few lines of mapperLibsvm.py, set the locations of train.range and train.model and set 'flagAmazonMadReduce' to True/False, depending on whether you're using Amaozon EMR. If you're using EMR, place the files in a directory in Amazon's S3 storage. Right-click on the directory and make it public. Verify that the files are public by accessing a website like the following from a web browser:
+
+https://s3.amazonaws.com/bucketName/config/train.range
+
+bucketName is the name of your bucket in S3 and config is the name of your directory that you made public. Right-click again if it doesn't work. It always took me two times - probably an Amazon bug.
+
+Making the files public allows the scripts to access the model and range files through https, as recommended by Amazon. If this method of file access creates a bottleneck, search Amazon's user forum for other solutions.
+
+5) Convert the testing data to a format like the following:
+
+00001 1:12.112 2:15.2212 4:-12.332
+
+The first value is the key in a key-value pair used in map reduce. The remaining values are the unscaled feature values. Not all features need to be assigned a value. In the example, features 3 and 5 are missing and will not be used to make a prediction. Features that were never present in the training data can appear in the testing data, however, they'll be ignored since we have no way of knowing how they predict the class.
+
+6) Run Hadoop or Amazon EMR as you normally would.
+
+Acknowledgements
+
+Thanks to the developers of LibSVM, Hadoop and Python and Michael Noll for his Hadoop tutorial.
