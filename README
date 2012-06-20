@@ -1,4 +1,4 @@
-The Python scripts take LibSVM's training output such as support vectors and kernel coefficients, then predict the class for a larger set of data using Hadoop Streaming and Python. The scripts support two-class classification for radial basis function, linear, polynomial and sigmoid kernels.
+My Python scripts adapt LibSVM, a popular Support Vector Machine software program, to Hadoop, for large scale data classification.  The Python scripts take LibSVM's training output, such as support vectors and kernel coefficients, then predict the class for a larger set of data using Hadoop Streaming and Python. The scripts support two-class classification for radial basis function, linear, polynomial and sigmoid kernels.
 
 Comparison of Output
 
@@ -35,6 +35,10 @@ Making the files public allows the scripts to access the model and range files t
 The first value is the key in a key-value pair used in map reduce. The remaining values are the unscaled feature values. Not all features need to be assigned a value. In the example, features 3 and 5 are missing and will not be used to make a prediction. Features that were never present in the training data can appear in the testing data, however, they'll be ignored since we have no way of knowing how they predict the class.
 
 6) Run Hadoop or Amazon EMR as you normally would.
+
+Data Source
+
+Data was obtained from http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/breast-cancer, which was orginally provided by W.H. Wolberg, W.N. Street and O.L. Mangasarian.
 
 Acknowledgements
 
